@@ -11,6 +11,7 @@ import { JsonLogo } from "./icons";
 import { JsonTreeView } from "./json-tree-view";
 import { useJsonEditor } from "@/hooks/use-json-editor";
 import { useToast } from "@/hooks/use-toast";
+import { AdPlaceholder } from "./ad-placeholder";
 
 const sampleJson = {
   "id": "0001",
@@ -192,9 +193,7 @@ a.click();
               Download JSON
             </Button>
           </div>
-          <div className="mt-4 p-2 border rounded-md text-center bg-muted/50">
-            <p className="text-sm text-muted-foreground">Ad Placeholder</p>
-          </div>
+          <AdPlaceholder />
         </SidebarContent>
       </Sidebar>
       <SidebarInset className="flex flex-col">
