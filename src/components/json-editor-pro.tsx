@@ -141,7 +141,7 @@ export default function JsonEditorPro() {
     a.href = url;
     a.download = source.value ? source.value.split('/').pop() || 'data.json' : "data.json";
     document.body.appendChild(a);
-    a.click();
+a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   };
@@ -191,6 +191,9 @@ export default function JsonEditorPro() {
               <Download className="mr-2 size-4" />
               Download JSON
             </Button>
+          </div>
+          <div className="mt-4 p-2 border rounded-md text-center bg-muted/50">
+            <p className="text-sm text-muted-foreground">Ad Placeholder</p>
           </div>
         </SidebarContent>
       </Sidebar>
@@ -252,4 +255,3 @@ export default function JsonEditorPro() {
     </SidebarProvider>
   );
 }
-

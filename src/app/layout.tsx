@@ -3,9 +3,37 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 import { ThemeProvider } from "next-themes"
 
+const title = 'JSON Editor Pro | View, Edit & Format JSON Online';
+const description = 'A powerful, free, and intuitive online tool to view, edit, and format JSON data in a clean, user-friendly tree view. Load JSON from a URL or file. Download your edited JSON with one click.';
+const url = "https://iamtiksha.com/dev-tools/json-editor-pro/";
+
 export const metadata: Metadata = {
-  title: 'JSON Editor Pro',
-  description: 'Visually edit JSON with AI-powered assistance.',
+  title: title,
+  description: description,
+  keywords: ['json editor', 'json viewer', 'json formatter', 'online json tool', 'free json editor', 'visual json editor', 'json tree view'],
+  openGraph: {
+    title: title,
+    description: description,
+    url: url,
+    type: 'website',
+    images: [
+        {
+            url: `${url}og-image.png`,
+            width: 1200,
+            height: 630,
+            alt: 'JSON Editor Pro',
+        },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: title,
+    description: description,
+    images: [`${url}og-image.png`],
+  },
+  alternates: {
+    canonical: url,
+  },
 };
 
 export default function RootLayout({
