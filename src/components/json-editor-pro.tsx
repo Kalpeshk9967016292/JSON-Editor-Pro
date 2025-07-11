@@ -1,17 +1,18 @@
 
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useCallback, useMemo } from "react";
 import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Download, FileUp, Link as LinkIcon, Loader2, Workflow, X } from "lucide-react";
+import { Download, FileUp, Link as LinkIcon, Loader2, Workflow, X, Search } from "lucide-react";
 import { JsonLogo } from "./icons";
 import { JsonTreeView } from "./json-tree-view";
 import { useJsonEditor } from "@/hooks/use-json-editor";
 import { useToast } from "@/hooks/use-toast";
 import { AdPlaceholder } from "./ad-placeholder";
+import type { JsonPath, JsonValue } from "@/hooks/use-json-editor";
 
 const sampleJson = {
   "id": "0001",
@@ -50,6 +51,7 @@ export default function JsonEditorPro() {
     error,
     setError,
     expanded,
+    setExpanded,
     toggleNode,
     updateNode,
     addNode,
@@ -60,6 +62,7 @@ export default function JsonEditorPro() {
   const { toast } = useToast();
   const [url, setUrl] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const handleFetchUrl = async () => {
     if (!url) {
@@ -153,6 +156,52 @@ a.click();
     setError(null);
   }
 
+  const searchResults = useMemo(() => {
+    if (!searchQuery.trim() || !data) {
+      return [];
+    }
+    const results: string[] = [];
+    const lowerCaseQuery = searchQuery.toLowerCase();
+
+    function traverse(node: JsonValue, path: JsonPath) {
+      if (typeof node === 'object' && node !== null) {
+        Object.entries(node).forEach(([key, value]) => {
+          const newPath = [...path, Array.isArray(node) ? parseInt(key) : key];
+          if (key.toLowerCase().includes(lowerCaseQuery)) {
+            results.push(JSON.stringify(newPath));
+          }
+          if (typeof value === 'string' && value.toLowerCase().includes(lowerCaseQuery)) {
+            results.push(JSON.stringify(newPath));
+          } else if (typeof value === 'number' && String(value).toLowerCase().includes(lowerCaseQuery)) {
+            results.push(JSON.stringify(newPath));
+          }
+          traverse(value, newPath);
+        });
+      }
+    }
+
+    traverse(data, []);
+    return results;
+  }, [data, searchQuery]);
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const query = e.target.value;
+    setSearchQuery(query);
+
+    if (query.trim()) {
+      const pathsToExpand: Record<string, boolean> = { "[]": true };
+      searchResults.forEach(stringPath => {
+        const path = JSON.parse(stringPath);
+        for (let i = 0; i < path.length; i++) {
+          pathsToExpand[JSON.stringify(path.slice(0, i + 1))] = true;
+        }
+      });
+      setExpanded(pathsToExpand);
+    } else {
+      setExpanded({ "[]": true });
+    }
+  };
+
   return (
     <SidebarProvider>
       <Sidebar className="border-r">
@@ -199,7 +248,7 @@ a.click();
       <SidebarInset className="flex flex-col">
         <header className="flex items-center justify-between p-2 border-b bg-background/50 backdrop-blur-sm sticky top-0 z-10">
           <SidebarTrigger />
-          <div className="flex-1 text-center truncate px-4">
+          <div className="flex flex-1 items-center justify-center px-4">
             {source.value && (
               <div className="flex items-center justify-center gap-2">
                   <span className="text-sm font-medium truncate">{source.value}</span>
@@ -209,7 +258,16 @@ a.click();
               </div>
             )}
           </div>
-          <div className="w-7"></div>
+          <div className="relative flex-1 max-w-xs">
+            <Search className="absolute left-2 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+            <Input
+              placeholder="Search keys or values..."
+              className="pl-8 h-9"
+              value={searchQuery}
+              onChange={handleSearchChange}
+              disabled={!data || loading}
+            />
+          </div>
         </header>
         <main className="flex-1 p-4 lg:p-6 overflow-auto">
           {loading && (
@@ -247,6 +305,8 @@ a.click();
               onAdd={addNode}
               onDelete={deleteNode}
               onDuplicate={duplicateNode}
+              searchResults={searchResults}
+              searchQuery={searchQuery}
             />
           )}
         </main>

@@ -23,6 +23,8 @@ type JsonTreeViewProps = {
   onAdd: (path: JsonPath, key: string | null, value: JsonValue) => void;
   onDelete: (path: JsonPath) => void;
   onDuplicate: (path: JsonPath) => void;
+  searchResults: string[];
+  searchQuery: string;
 };
 
 type JsonNodeProps = {
@@ -49,6 +51,24 @@ const TYPE_COLORS: Record<string, string> = {
 
 const isHtml = (str: string) => typeof str === 'string' && /<[a-z][\s\S]*>/i.test(str);
 
+const highlightMatches = (text: string, query: string) => {
+    if (!query) return text;
+    const parts = text.split(new RegExp(`(${query})`, 'gi'));
+    return (
+      <>
+        {parts.map((part, i) =>
+          part.toLowerCase() === query.toLowerCase() ? (
+            <span key={i} className="bg-yellow-200 dark:bg-yellow-700 rounded-sm">
+              {part}
+            </span>
+          ) : (
+            part
+          )
+        )}
+      </>
+    );
+};
+
 export function JsonTreeView(props: JsonTreeViewProps) {
   return (
     <TooltipProvider>
@@ -60,7 +80,7 @@ export function JsonTreeView(props: JsonTreeViewProps) {
 }
 
 function JsonNode(props: JsonNodeProps) {
-  const { nodeKey, nodeValue, path, level, expanded, onToggle, onUpdate, onAdd, onDelete, onDuplicate } = props;
+  const { nodeKey, nodeValue, path, level, expanded, onToggle, onUpdate, onAdd, onDelete, onDuplicate, searchResults, searchQuery } = props;
   const isRoot = level === 0;
   const dataType = getDataType(nodeValue);
   const isObject = dataType === 'object';
@@ -69,6 +89,7 @@ function JsonNode(props: JsonNodeProps) {
 
   const stringPath = JSON.stringify(path);
   const isExpanded = !!expanded[stringPath];
+  const isSearchResult = searchResults.includes(stringPath);
 
   const [isEditingKey, setIsEditingKey] = useState(false);
   const [isEditingValue, setIsEditingValue] = useState(false);
@@ -117,7 +138,7 @@ function JsonNode(props: JsonNodeProps) {
 
   return (
     <div className={cn("relative group/node", !isRoot && 'ml-6')}>
-      <div className={cn("flex items-center hover:bg-secondary/50 rounded-md", isRoot ? 'py-1' : 'py-0.5')}>
+      <div className={cn("flex items-center hover:bg-secondary/50 rounded-md", isRoot ? 'py-1' : 'py-0.5', isSearchResult && 'bg-yellow-100 dark:bg-yellow-900/50')}>
         {/* Expander */}
         <div className="w-5 flex-shrink-0">
           {!isScalar && (Object.keys(nodeValue as object).length > 0) && (
@@ -140,7 +161,7 @@ function JsonNode(props: JsonNodeProps) {
                 className="h-6 px-1 mr-1"
               />
             ) : (
-              <span className="text-gray-600 dark:text-gray-400 font-medium mr-1">{nodeKey}:</span>
+              <span className="text-gray-600 dark:text-gray-400 font-medium mr-1">{highlightMatches(nodeKey, searchQuery)}:</span>
             )}
            </div>
         )}
@@ -164,7 +185,7 @@ function JsonNode(props: JsonNodeProps) {
             ) : (
               <>
                 <span className={cn("font-mono", TYPE_COLORS[dataType])}>
-                    {dataType === 'string' ? `"${nodeValue}"` : String(nodeValue)}
+                    {dataType === 'string' ? `"${highlightMatches(nodeValue as string, searchQuery)}"` : highlightMatches(String(nodeValue), searchQuery)}
                 </span>
                 {valueIsHtml && (
                   <Tooltip>
