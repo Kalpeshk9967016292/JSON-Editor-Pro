@@ -1,7 +1,8 @@
+
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { ChevronRight, Plus, MoreVertical, Trash2, Copy, Edit, Check, X, Bot, Wand2, Loader2, ArrowRightLeft } from "lucide-react";
+import { ChevronRight, Plus, MoreVertical, Trash2, Copy, Edit, Check, X, Bot, Wand2, Loader2, ArrowRightLeft, Code } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { suggestJsonStructure } from "@/ai/flows/suggest-json-structure";
 import { useToast } from "@/hooks/use-toast";
 import type { JsonData, JsonPath, JsonValue } from "@/hooks/use-json-editor";
+import { HtmlEditor } from "./html-editor";
 
 type JsonTreeViewProps = {
   data: JsonData;
@@ -46,6 +48,8 @@ const TYPE_COLORS: Record<string, string> = {
   array: "text-gray-800 dark:text-gray-200",
 };
 
+const isHtml = (str: string) => typeof str === 'string' && /<[a-z][\s\S]*>/i.test(str);
+
 export function JsonTreeView(props: JsonTreeViewProps) {
   return (
     <TooltipProvider>
@@ -73,6 +77,9 @@ function JsonNode(props: JsonNodeProps) {
   const [editValue, setEditValue] = useState(isScalar ? String(nodeValue) : "");
 
   const [isAddDialogOpen, setAddDialogOpen] = useState(false);
+  const [isHtmlEditorOpen, setHtmlEditorOpen] = useState(false);
+  
+  const valueIsHtml = dataType === 'string' && isHtml(nodeValue as string);
 
   const handleKeyUpdate = () => {
     if (editKeyValue !== nodeKey) {
@@ -93,6 +100,10 @@ function JsonNode(props: JsonNodeProps) {
       onUpdate(path, newValue);
     }
     setIsEditingValue(false);
+  }
+
+  const handleHtmlSave = (newHtml: string) => {
+    onUpdate(path, newHtml);
   }
 
   const toggleExpand = () => onToggle(stringPath);
@@ -137,7 +148,7 @@ function JsonNode(props: JsonNodeProps) {
 
         {/* Value */}
         {isScalar && (
-          <div onDoubleClick={() => setIsEditingValue(true)} className="flex items-center gap-1">
+          <div onDoubleClick={() => !valueIsHtml && setIsEditingValue(true)} className="flex items-center gap-1">
             {isEditingValue ? (
                 <>
                 <Input
@@ -152,9 +163,21 @@ function JsonNode(props: JsonNodeProps) {
                 <Button size="icon" variant="ghost" className="size-6" onClick={() => setIsEditingValue(false)}><X className="size-4 text-red-600"/></Button>
                 </>
             ) : (
+              <>
                 <span className={cn("font-mono", TYPE_COLORS[dataType])}>
                     {dataType === 'string' ? `"${nodeValue}"` : String(nodeValue)}
                 </span>
+                {valueIsHtml && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button size="icon" variant="ghost" className="size-6 ml-1" onClick={() => setHtmlEditorOpen(true)}>
+                        <Code className="size-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Edit HTML</TooltipContent>
+                  </Tooltip>
+                )}
+              </>
             )}
           </div>
         )}
@@ -235,6 +258,14 @@ function JsonNode(props: JsonNodeProps) {
         currentType={dataType}
         onConfirm={(newType) => handleValueUpdate(newType, "")}
       />
+      {valueIsHtml && (
+        <HtmlEditor
+          isOpen={isHtmlEditorOpen}
+          onClose={() => setHtmlEditorOpen(false)}
+          initialValue={nodeValue as string}
+          onSave={handleHtmlSave}
+        />
+      )}
     </div>
   );
 }
@@ -359,3 +390,4 @@ function AddNodeDialog({isOpen, onClose, onAdd, parentPath, parentType, siblings
         </Dialog>
     )
 }
+

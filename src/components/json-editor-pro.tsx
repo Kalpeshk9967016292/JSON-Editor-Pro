@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useRef, useState } from "react";
@@ -16,6 +17,8 @@ const sampleJson = {
   "type": "donut",
   "name": "Cake",
   "ppu": 0.55,
+  "description": "A delicious cake donut.",
+  "html_example": "<h1>Welcome</h1><p>This is an <strong>HTML</strong> string.</p>",
   "batters": {
     "batter": [
       { "id": "1001", "type": "Regular" },
@@ -249,3 +252,4 @@ export default function JsonEditorPro() {
     </SidebarProvider>
   );
 }
+
