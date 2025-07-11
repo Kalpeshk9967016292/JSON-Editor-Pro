@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { ChevronRight, Plus, MoreVertical, Trash2, Copy, Edit, Check, X, Bot, Wand2, Loader2, ArrowRightLeft, Code } from "lucide-react";
+import { ChevronRight, Plus, MoreVertical, Trash2, Copy, Edit, Check, X, Code, ArrowRightLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +11,6 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { suggestJsonStructure } from "@/ai/flows/suggest-json-structure";
 import { useToast } from "@/hooks/use-toast";
 import type { JsonData, JsonPath, JsonValue } from "@/hooks/use-json-editor";
 import { HtmlEditor } from "./html-editor";
@@ -249,7 +248,6 @@ function JsonNode(props: JsonNodeProps) {
         onAdd={onAdd}
         parentPath={path}
         parentType={isObject ? "object" : (isArray ? "array" : "scalar")}
-        siblings={isRoot ? (nodeValue ?? {}) : Object.values(nodeValue ?? {})}
       />
       
       <ChangeTypeDialog 
@@ -297,12 +295,10 @@ function ChangeTypeDialog({isOpen, onClose, currentType, onConfirm}: {isOpen: bo
     )
 }
 
-function AddNodeDialog({isOpen, onClose, onAdd, parentPath, parentType, siblings}: {isOpen: boolean, onClose: () => void, onAdd: (path: JsonPath, key: string | null, value: JsonValue) => void, parentPath: JsonPath, parentType: string, siblings: any[]}) {
+function AddNodeDialog({isOpen, onClose, onAdd, parentPath, parentType}: {isOpen: boolean, onClose: () => void, onAdd: (path: JsonPath, key: string | null, value: JsonValue) => void, parentPath: JsonPath, parentType: string}) {
     const [key, setKey] = useState("");
     const [type, setType] = useState("string");
     const [value, setValue] = useState<JsonValue>("");
-    const [loadingAI, setLoadingAI] = useState(false);
-    const { toast } = useToast();
 
     useEffect(() => {
         if(isOpen) {
@@ -323,34 +319,6 @@ function AddNodeDialog({isOpen, onClose, onAdd, parentPath, parentType, siblings
         onAdd(parentPath, parentType === 'array' ? null : key, finalValue);
         onClose();
     };
-
-    const handleAISuggest = async () => {
-        setLoadingAI(true);
-        try {
-            const siblingsJson = JSON.stringify(siblings);
-            const result = await suggestJsonStructure({
-                siblingsJson,
-                newElementType: type as "object" | "array" | "string" | "number" | "boolean" | "null",
-            });
-            const suggested = JSON.parse(result.suggestedStructure);
-            onAdd(parentPath, parentType === 'array' ? null : key, suggested);
-            toast({
-              title: "AI Suggestion Applied",
-              description: "The suggested JSON structure has been added.",
-            });
-            onClose();
-
-        } catch (error) {
-            console.error("AI suggestion failed:", error);
-            toast({
-                variant: "destructive",
-                title: "AI Suggestion Failed",
-                description: "Could not generate a suggestion. Please try again.",
-            });
-        } finally {
-            setLoadingAI(false);
-        }
-    }
 
     const pathIsArray = parentType === 'array';
 
@@ -380,14 +348,10 @@ function AddNodeDialog({isOpen, onClose, onAdd, parentPath, parentType, siblings
                     </div>
                 </div>
                 <DialogFooter>
-                    <Button variant="outline" onClick={handleAISuggest} disabled={loadingAI || (type !== 'object' && type !== 'array')} >
-                        {loadingAI ? <Loader2 className="mr-2 size-4 animate-spin"/> : <Bot className="mr-2 size-4" />}
-                        Suggest with AI
-                    </Button>
+                    <Button variant="ghost" onClick={onClose}>Cancel</Button>
                     <Button onClick={handleAdd}>Add</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
     )
 }
-
