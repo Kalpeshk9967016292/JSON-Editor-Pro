@@ -2,16 +2,21 @@
 "use client";
 
 import 'react-quill/dist/quill.snow.css';
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import dynamic from 'next/dynamic';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import type ReactQuillType from 'react-quill';
 
 // Dynamically import ReactQuill to ensure it's only loaded on the client side
 const ReactQuill = dynamic(
-    () => import('react-quill'), 
-    { 
+    async () => {
+        const { default: RQ } = await import('react-quill');
+        // The forwardRef is necessary to get a ref to the editor instance
+        return ({ forwardedRef, ...props }: { forwardedRef: React.Ref<ReactQuillType>; [key: string]: any }) => <RQ ref={forwardedRef} {...props} />;
+    },
+    {
         ssr: false,
         loading: () => <Skeleton className="h-[calc(100%-80px)] w-full" />
     }
@@ -27,6 +32,7 @@ interface HtmlEditorProps {
 
 export function HtmlEditor({ initialValue, isOpen, onClose, onSave }: HtmlEditorProps) {
   const [html, setHtml] = useState(initialValue);
+  const quillRef = useRef<ReactQuillType>(null);
 
   useEffect(() => {
     setHtml(initialValue);
@@ -68,13 +74,13 @@ export function HtmlEditor({ initialValue, isOpen, onClose, onSave }: HtmlEditor
         </DialogHeader>
         <div className="flex-1 overflow-y-auto pb-4">
             <ReactQuill
+                forwardedRef={quillRef}
                 theme="snow"
                 value={html}
                 onChange={setHtml}
                 modules={modules}
                 formats={formats}
                 className="h-full bg-white text-black"
-                style={{color: "black"}}
             />
         </div>
         <DialogFooter>
