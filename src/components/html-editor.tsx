@@ -1,10 +1,22 @@
 
 "use client";
 
+import 'react-quill/dist/quill.snow.css';
 import { useState, useEffect } from "react";
+import dynamic from 'next/dynamic';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
+import { Skeleton } from "@/components/ui/skeleton";
+
+// Dynamically import ReactQuill to ensure it's only loaded on the client side
+const ReactQuill = dynamic(
+    () => import('react-quill'), 
+    { 
+        ssr: false,
+        loading: () => <Skeleton className="h-[calc(100%-80px)] w-full" />
+    }
+);
+
 
 interface HtmlEditorProps {
   initialValue: string;
@@ -15,20 +27,10 @@ interface HtmlEditorProps {
 
 export function HtmlEditor({ initialValue, isOpen, onClose, onSave }: HtmlEditorProps) {
   const [html, setHtml] = useState(initialValue);
-  const [iframeContent, setIframeContent] = useState("");
 
   useEffect(() => {
     setHtml(initialValue);
   }, [initialValue]);
-
-  useEffect(() => {
-    // To prevent hydration errors, we only update the iframe content on the client side
-    // after the component has mounted.
-    const timeoutId = setTimeout(() => {
-        setIframeContent(html);
-    }, 300); // Debounce iframe updates
-    return () => clearTimeout(timeoutId);
-  }, [html]);
 
   const handleSave = () => {
     onSave(html);
@@ -39,34 +41,41 @@ export function HtmlEditor({ initialValue, isOpen, onClose, onSave }: HtmlEditor
     return null;
   }
 
+  const modules = {
+    toolbar: [
+      [{ 'header': '1'}, {'header': '2'}, { 'font': [] }],
+      [{size: []}],
+      ['bold', 'italic', 'underline', 'strike', 'blockquote'],
+      [{'list': 'ordered'}, {'list': 'bullet'}, 
+       {'indent': '-1'}, {'indent': '+1'}],
+      ['link', 'image', 'video'],
+      ['clean']
+    ],
+  };
+
+  const formats = [
+    'header', 'font', 'size',
+    'bold', 'italic', 'underline', 'strike', 'blockquote',
+    'list', 'bullet', 'indent',
+    'link', 'image', 'video'
+  ];
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl h-[80vh]">
+      <DialogContent className="max-w-4xl h-[80vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>HTML Visual Editor</DialogTitle>
         </DialogHeader>
-        <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 overflow-hidden h-[calc(100%-80px)]">
-          <div className="flex flex-col gap-2 h-full">
-            <label htmlFor="html-input" className="font-medium text-sm">HTML Code</label>
-            <Textarea
-              id="html-input"
-              value={html}
-              onChange={(e) => setHtml(e.target.value)}
-              className="flex-1 font-code resize-none"
-              placeholder="Enter your HTML here..."
+        <div className="flex-1 overflow-y-auto pb-4">
+            <ReactQuill
+                theme="snow"
+                value={html}
+                onChange={setHtml}
+                modules={modules}
+                formats={formats}
+                className="h-full bg-white text-black"
+                style={{color: "black"}}
             />
-          </div>
-          <div className="flex flex-col gap-2 h-full">
-            <label className="font-medium text-sm">Preview</label>
-            <div className="flex-1 border rounded-md bg-white">
-                <iframe
-                    srcDoc={iframeContent}
-                    title="HTML Preview"
-                    sandbox="allow-scripts allow-same-origin"
-                    className="w-full h-full border-0"
-                />
-            </div>
-          </div>
         </div>
         <DialogFooter>
           <DialogClose asChild>
@@ -78,4 +87,3 @@ export function HtmlEditor({ initialValue, isOpen, onClose, onSave }: HtmlEditor
     </Dialog>
   );
 }
-
