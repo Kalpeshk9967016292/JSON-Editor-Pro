@@ -1,21 +1,11 @@
 
 "use client";
 
-import 'react-quill/dist/quill.snow.css';
-import { useState, useEffect, useRef } from "react";
-import dynamic from 'next/dynamic';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
+import { useRef } from "react";
+import { Editor } from '@tinymce/tinymce-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import type ReactQuillType from 'react-quill';
-
-// Dynamically import ReactQuill to ensure it's only loaded on the client side
-// This is the correct way to handle libraries that are not SSR-compatible.
-const ReactQuill = dynamic(() => import('react-quill'), {
-    ssr: false,
-    loading: () => <Skeleton className="h-[calc(100%-80px)] w-full" />
-});
-
+import { useTheme } from "next-themes";
 
 interface HtmlEditorProps {
   initialValue: string;
@@ -25,40 +15,19 @@ interface HtmlEditorProps {
 }
 
 export function HtmlEditor({ initialValue, isOpen, onClose, onSave }: HtmlEditorProps) {
-  const [html, setHtml] = useState(initialValue);
-  const quillRef = useRef<ReactQuillType>(null);
-
-  useEffect(() => {
-    setHtml(initialValue);
-  }, [initialValue]);
+  const editorRef = useRef<any>(null);
+  const { resolvedTheme } = useTheme();
 
   const handleSave = () => {
-    onSave(html);
-    onClose();
+    if (editorRef.current) {
+      onSave(editorRef.current.getContent());
+      onClose();
+    }
   };
 
   if (!isOpen) {
     return null;
   }
-
-  const modules = {
-    toolbar: [
-      [{ 'header': '1'}, {'header': '2'}, { 'font': [] }],
-      [{size: []}],
-      ['bold', 'italic', 'underline', 'strike', 'blockquote'],
-      [{'list': 'ordered'}, {'list': 'bullet'}, 
-       {'indent': '-1'}, {'indent': '+1'}],
-      ['link', 'image', 'video'],
-      ['clean']
-    ],
-  };
-
-  const formats = [
-    'header', 'font', 'size',
-    'bold', 'italic', 'underline', 'strike', 'blockquote',
-    'list', 'bullet', 'indent',
-    'link', 'image', 'video'
-  ];
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -67,20 +36,30 @@ export function HtmlEditor({ initialValue, isOpen, onClose, onSave }: HtmlEditor
           <DialogTitle>HTML Visual Editor</DialogTitle>
         </DialogHeader>
         <div className="flex-1 overflow-y-auto pb-4">
-            <ReactQuill
-                ref={quillRef}
-                theme="snow"
-                value={html}
-                onChange={setHtml}
-                modules={modules}
-                formats={formats}
-                className="h-full bg-white text-black"
-            />
+          <Editor
+            apiKey={process.env.NEXT_PUBLIC_TINYMCE_API_KEY || 'no-api-key'}
+            onInit={(_evt, editor) => editorRef.current = editor}
+            initialValue={initialValue}
+            init={{
+              height: '100%',
+              menubar: false,
+              plugins: [
+                'advlist', 'autolink', 'lists', 'link', 'image', 'charmap',
+                'preview', 'anchor', 'searchreplace', 'visualblocks', 'code',
+                'fullscreen', 'insertdatetime', 'media', 'table', 'help', 'wordcount'
+              ],
+              toolbar: 'undo redo | blocks | ' +
+              'bold italic forecolor | alignleft aligncenter ' +
+              'alignright alignjustify | bullist numlist outdent indent | ' +
+              'removeformat | help',
+              content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }',
+              skin: resolvedTheme === 'dark' ? 'oxide-dark' : 'oxide',
+              content_css: resolvedTheme === 'dark' ? 'dark' : 'default',
+            }}
+          />
         </div>
         <DialogFooter>
-          <DialogClose asChild>
-            <Button variant="ghost" onClick={onClose}>Cancel</Button>
-          </DialogClose>
+          <Button variant="ghost" onClick={onClose}>Cancel</Button>
           <Button onClick={handleSave}>Save Changes</Button>
         </DialogFooter>
       </DialogContent>
