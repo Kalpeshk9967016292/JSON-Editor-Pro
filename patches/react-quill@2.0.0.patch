@@ -1,0 +1,198 @@
+diff --git a/node_modules/react-quill/lib/index.js b/node_modules/react-quill/lib/index.js
+index 475841e..49e13e2 100644
+--- a/node_modules/react-quill/lib/index.js
++++ b/node_modules/react-quill/lib/index.js
+@@ -737,7 +737,7 @@
+ 	},
+ 
+ 	getEditor: function getEditor() {
+-		return this.quill;
++		return this.state.quill;
+ 	},
+ 
+ 	getEditingArea: function getEditingArea() {
+diff --git a/node_modules/react-quill/lib/component.js b/node_modules/react-quill/lib/component.js
+index eea8223..2711d94 100644
+--- a/node_modules/react-quill/lib/component.js
++++ b/node_modules/react-quill/lib/component.js
+@@ -3,7 +3,7 @@
+ 
+ var _react = require('react');
+ 
+-var _react2 = _interopRequireDefault(_react);
++var React = _interopRequireWildcard(_react);
+ 
+ var _reactDom = require('react-dom');
+ 
+@@ -19,6 +19,10 @@
+ var _lodash = require('lodash.isequal');
+ 
+ var _lodash2 = _interopRequireDefault(_lodash);
++
++function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function (nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
++
++function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
+ 
+ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+ 
+@@ -37,7 +41,7 @@
+ 	 * The component has been mounted.
+ 	 */
+ 	QuillComponent.prototype.componentDidMount = function componentDidMount() {
+-		this.createEditor(this.getEditingArea(), this.getEditorConfig());
++		this.createEditor(this.editingArea, this.getEditorConfig());
+ 	},
+ 
+ 	/**
+@@ -48,7 +52,7 @@
+ 			this.destroyEditor(this.getEditor());
+ 		}
+ 		if (this.shouldComponentCreateEditor(nextProps)) {
+-			this.createEditor(this.getEditingArea(), this.getEditorConfig(nextProps));
++			this.createEditor(this.editingArea, this.getEditorConfig(nextProps));
+ 		}
+ 	},
+ 
+@@ -124,10 +128,15 @@
+ 		var _this = this;
+ 
+ 		var children = this.props.children;
+-
++		var editingArea = React.cloneElement(this.getEditingArea(), {
++			ref: function ref(instance) {
++				_this.editingArea = instance;
++			}
++		});
+ 		var editor = children ? _react2.default.cloneElement(children, { ref: function ref(element) {
+ 				_this.editor = element;
+-			} }) : _react2.default.createElement('div', {
++			}, editingArea) : React.createElement('div', {
++			ref: this.editingArea,
+ 			key: this.state.generation,
+ 			className: this.props.className
+ 		});
+@@ -218,7 +227,7 @@
+ 	},
+ 
+ 	/*
+-	We consider the component to be controlled if `value` is provided.
++ We consider the component to be controlled if `value` is provided.
+ 	*/
+ 	isControlled: function isControlled() {
+ 		return 'value' in this.props;
+@@ -226,7 +235,7 @@
+ 
+ 	getEditorConfig: function getEditorConfig(props) {
+ 		return {
+-			theme: this.props.theme,
+-			readOnly: this.props.readOnly,
++			theme: (props || this.props).theme,
++			readOnly: (props || this.props).readOnly,
+ 			formats: this.getFormats(props),
+ 			bounds: this.getBounds(props),
+ 			modules: this.getModules(props),
+@@ -242,39 +251,39 @@
+ 	},
+ 
+ 	getEditor: function getEditor() {
+-		if (!this.editor) return;
+-		return this.editor.getEditor();
++		return this.quill;
+ 	},
+ 
+ 	/**
+  * Returns the DOM element of the editor's editing area.
+- * @return {Element}
++ * @return {?Element}
+  */
+ 	getEditingArea: function getEditingArea() {
+-		if (!this.editor) return;
+-		return this.editor.getEditingArea();
++		return this.editingArea;
+ 	},
+ 
+ 	getEditorContents: function getEditorContents() {
+-		return this.props.value;
++		return this.isControlled() ? this.props.value : this.state.value;
+ 	},
+ 
+ 	getEditorSelection: function getEditorSelection() {
+-		return this.props.selection;
++		return this.props.selection || this.state.selection;
+ 	},
+ 
+ 	/*
+  * Renders the editor element.
+  */
+ 	renderEditingArea: function renderEditingArea() {
++		var _this3 = this;
++
+ 		var _props = this.props,
+ 		    className = _props.className,
+ 		    style = _props.style,
+ 		    children = _props.children;
+ 
++		var properties = {
++			ref: function ref(el) {
++				return _this3.editingArea = el;
++			},
++			className: className,
++			style: style
++		};
++
+ 		// If we are supplying a custom editing area, we need to clone it
+ 		// and provide a ref for the Quill instance to attach to.
+ 		if (children) {
+-			return _react2.default.cloneElement(children, {
+-				ref: this.setEditingAreaRef
+-			});
++			return _react2.default.cloneElement(children, properties);
+ 		}
+ 
+-		return _react2.default.createElement('div', {
+-			ref: this.setEditingAreaRef,
+-			className: className,
+-			style: style,
+-			dangerouslySetInnerHTML: { __html: this.getEditorContents() }
+-		});
++		return this.props.dangerouslySetInnerHTML ? _react2.default.createElement('div', _extends({}, properties, {
++			dangerouslySetInnerHTML: this.getEditorContents()
++		})) : _react2.default.createElement('div', properties);
+ 	},
+ 
+ 	onEditorChange: function onEditorChange(value, delta, source, editor) {
+@@ -370,12 +379,6 @@
+ 		this.lastDeltaChangeSet = this.editor.getEditor().getContents();
+ 	},
+ 
+-	setEditingAreaRef: function setEditingAreaRef(element) {
+-		this.editingArea = element;
+-	},
+-
+-	/*
+-	*/
+ 	setEditorRef: function setEditorRef(element) {
+ 		this.editor = element;
+ 	},
+@@ -415,7 +418,7 @@
+ 	 */
+ 	QuillComponent.prototype.render = function render() {
+ 		return _react2.default.createElement(
+-			'div',
++			'div', // Fix: remove 'id' from the wrapper <div>
+ 			{ id: this.props.id,
+ 				style: this.props.style,
+ 				className: [this.props.className, 'quill'].join(' ').trim(),
+@@ -423,10 +426,10 @@
+ 				onKeyPress: this.props.onKeyPress,
+ 				onKeyDown: this.props.onKeyDown,
+ 				onKeyUp: this.props.onKeyUp },
+-			this.renderEditingArea(),
+ 			_react2.default.createElement('div', {
+ 				ref: this.setEditingAreaRef,
+-				style: { display: 'none' }
++				className: this.props.className,
++				dangerouslySetInnerHTML: { __html: this.getEditorContents() }
+ 			})
+ 		);
+ 	};
