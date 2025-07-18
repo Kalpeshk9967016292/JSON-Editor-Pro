@@ -18,8 +18,8 @@ export function AdPlaceholder() {
       <ins
         className="adsbygoogle"
         style={{ display: 'block' }}
-        data-ad-client="ca-pub-XXXXXXXXXXXXXXXX" // Replace with your Publisher ID
-        data-ad-slot="YYYYYYYYYY"               // Replace with your Ad Slot ID
+        data-ad-client="ca-pub-4648414963251970" // Replace with your Publisher ID
+        data-ad-slot="8798468173"               // Replace with your Ad Slot ID
         data-ad-format="auto"
         data-full-width-responsive="true"
       ></ins>
