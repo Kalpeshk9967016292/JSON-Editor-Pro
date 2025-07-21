@@ -71,23 +71,38 @@ export default function JsonEditorPro() {
     }
     setLoading(true);
     setError(null);
+    setData(null);
+
     try {
       const response = await fetch(url);
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        let errorMsg = `HTTP error! Status: ${response.status} ${response.statusText}`;
+        if (response.status === 404) {
+            errorMsg = "The requested URL was not found (404). Please check the URL and try again.";
+        } else if (response.status === 403) {
+            errorMsg = "Access to the URL is forbidden (403). The server is refusing to fulfill the request.";
+        } else if (response.status >= 500) {
+            errorMsg = `The server encountered an error (${response.status}). Please try again later.`;
+        }
+        throw new Error(errorMsg);
       }
       const jsonData = await response.json();
       setData(jsonData);
       setSource({ type: "url", value: url });
     } catch (e) {
-      const errorMessage = e instanceof Error ? e.message : "An unknown error occurred.";
-      setError(`Failed to fetch or parse JSON from URL: ${errorMessage}`);
+      let errorMessage = e instanceof Error ? e.message : "An unknown error occurred.";
+       if (errorMessage.includes("Failed to fetch")) {
+        errorMessage = "Could not fetch the URL. This might be due to a network issue or a CORS policy blocking the request. Check the browser's developer console for more details.";
+      } else if (errorMessage.includes("Unexpected token")) {
+        errorMessage = "Failed to parse JSON. The response from the URL is not valid JSON.";
+      }
+      
+      setError(errorMessage);
       toast({
         variant: "destructive",
         title: "Error",
-        description: `Failed to fetch or parse JSON from URL: ${errorMessage}`,
+        description: errorMessage,
       });
-      setData(null);
     } finally {
       setLoading(false);
     }
