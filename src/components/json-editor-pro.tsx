@@ -86,15 +86,22 @@ export default function JsonEditorPro() {
         }
         throw new Error(errorMsg);
       }
-      const jsonData = await response.json();
-      setData(jsonData);
-      setSource({ type: "url", value: url });
+      const textData = await response.text();
+      try {
+        const jsonData = JSON.parse(textData);
+        setData(jsonData);
+        setSource({ type: "url", value: url });
+      } catch (e) {
+        if (e instanceof SyntaxError) {
+          throw new Error(`Invalid JSON format: ${e.message}.`);
+        }
+        throw e;
+      }
+
     } catch (e) {
       let errorMessage = e instanceof Error ? e.message : "An unknown error occurred.";
        if (errorMessage.includes("Failed to fetch")) {
         errorMessage = "Could not fetch the URL. This might be due to a network issue or a CORS policy blocking the request. Check the browser's developer console for more details.";
-      } else if (errorMessage.includes("Unexpected token")) {
-        errorMessage = "Failed to parse JSON. The response from the URL is not valid JSON.";
       }
       
       setError(errorMessage);
@@ -124,12 +131,17 @@ export default function JsonEditorPro() {
           setData(jsonData);
           setSource({ type: "file", value: file.name });
         } catch (e) {
-          const errorMessage = e instanceof Error ? e.message : "An unknown error occurred.";
-          setError(`Failed to parse JSON from file: ${errorMessage}`);
+          let errorMessage = "An unknown error occurred while parsing the file.";
+          if (e instanceof SyntaxError) {
+              errorMessage = `Invalid JSON format: ${e.message}.`;
+          } else if (e instanceof Error) {
+              errorMessage = e.message;
+          }
+          setError(errorMessage);
           toast({
             variant: "destructive",
-            title: "Error",
-            description: `Failed to parse JSON from file: ${errorMessage}`,
+            title: "Error Parsing File",
+            description: errorMessage,
           });
           setData(null);
         } finally {
@@ -298,7 +310,7 @@ a.click();
                           <CardTitle className="text-destructive">Error</CardTitle>
                       </CardHeader>
                       <CardContent>
-                          <p className="text-destructive-foreground/80">{error}</p>
+                          <p className="text-destructive-foreground/80 font-mono text-sm">{error}</p>
                       </CardContent>
                   </Card>
               </div>
