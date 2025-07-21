@@ -7,7 +7,7 @@ export default function Home() {
       <div className="relative h-svh overflow-hidden">
         <JsonEditorPro />
       </div>
-      <div className="p-4 lg:p-6 bg-background md:pl-[calc(16rem+1.5rem)]">
+      <div className="p-4 bg-background md:pl-[calc(16rem+1.5rem)]">
         <JsonInfoArticle />
       </div>
     </div>
