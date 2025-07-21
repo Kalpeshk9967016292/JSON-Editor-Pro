@@ -204,113 +204,115 @@ a.click();
 
   return (
     <SidebarProvider>
-      <Sidebar className="border-r">
-        <SidebarHeader className="p-4">
-          <div className="flex items-center gap-2">
-            <JsonLogo className="size-8 text-primary" />
-            <h1 className="text-xl font-headline font-bold">JSON Editor Pro</h1>
-          </div>
-        </SidebarHeader>
-        <SidebarContent className="p-4 flex flex-col gap-6">
-          <div className="space-y-2">
-            <h2 className="font-semibold">Load from URL</h2>
-            <div className="flex gap-2">
-              <Input
-                placeholder="https://example.com/data.json"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleFetchUrl()}
-                disabled={loading}
-              />
-              <Button onClick={handleFetchUrl} disabled={loading} size="icon" variant="ghost">
-                <LinkIcon className="size-4"/>
+      <div className="flex w-full">
+        <Sidebar className="border-r">
+          <SidebarHeader className="p-4">
+            <div className="flex items-center gap-2">
+              <JsonLogo className="size-8 text-primary" />
+              <h1 className="text-xl font-headline font-bold">JSON Editor Pro</h1>
+            </div>
+          </SidebarHeader>
+          <SidebarContent className="p-4 flex flex-col gap-6">
+            <div className="space-y-2">
+              <h2 className="font-semibold">Load from URL</h2>
+              <div className="flex gap-2">
+                <Input
+                  placeholder="https://example.com/data.json"
+                  value={url}
+                  onChange={(e) => setUrl(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleFetchUrl()}
+                  disabled={loading}
+                />
+                <Button onClick={handleFetchUrl} disabled={loading} size="icon" variant="ghost">
+                  <LinkIcon className="size-4"/>
+                </Button>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <h2 className="font-semibold">Load from File</h2>
+              <input type="file" ref={fileInputRef} onChange={handleFileChange} accept=".json" className="hidden" />
+              <Button onClick={() => fileInputRef.current?.click()} className="w-full" disabled={loading}>
+                <FileUp className="mr-2 size-4" />
+                Choose File
               </Button>
             </div>
-          </div>
-          <div className="space-y-2">
-            <h2 className="font-semibold">Load from File</h2>
-            <input type="file" ref={fileInputRef} onChange={handleFileChange} accept=".json" className="hidden" />
-            <Button onClick={() => fileInputRef.current?.click()} className="w-full" disabled={loading}>
-              <FileUp className="mr-2 size-4" />
-              Choose File
-            </Button>
-          </div>
-          <div className="space-y-2">
-            <h2 className="font-semibold">Export</h2>
-            <Button onClick={handleDownload} className="w-full" variant="secondary" disabled={!data || loading}>
-              <Download className="mr-2 size-4" />
-              Download JSON
-            </Button>
-          </div>
-          <AdPlaceholder />
-        </SidebarContent>
-      </Sidebar>
-      <SidebarInset className="flex flex-col flex-1">
-        <header className="flex items-center justify-between p-2 border-b bg-background/50 backdrop-blur-sm sticky top-0 z-10">
-          <SidebarTrigger />
-          <div className="flex flex-1 items-center justify-center px-4">
-            {source.value && (
-              <div className="flex items-center justify-center gap-2">
-                  <span className="text-sm font-medium truncate">{source.value}</span>
-                  <Button variant="ghost" size="icon" className="size-6" onClick={clearData}>
-                      <X className="size-4" />
-                  </Button>
+            <div className="space-y-2">
+              <h2 className="font-semibold">Export</h2>
+              <Button onClick={handleDownload} className="w-full" variant="secondary" disabled={!data || loading}>
+                <Download className="mr-2 size-4" />
+                Download JSON
+              </Button>
+            </div>
+            <AdPlaceholder />
+          </SidebarContent>
+        </Sidebar>
+        <SidebarInset className="flex flex-col flex-1">
+          <header className="flex items-center justify-between p-2 border-b bg-background/50 backdrop-blur-sm sticky top-0 z-10">
+            <SidebarTrigger />
+            <div className="flex flex-1 items-center justify-center px-4">
+              {source.value && (
+                <div className="flex items-center justify-center gap-2">
+                    <span className="text-sm font-medium truncate">{source.value}</span>
+                    <Button variant="ghost" size="icon" className="size-6" onClick={clearData}>
+                        <X className="size-4" />
+                    </Button>
+                </div>
+              )}
+            </div>
+            <div className="relative flex-1 max-w-xs">
+              <Search className="absolute left-2 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+              <Input
+                placeholder="Search keys or values..."
+                className="pl-8 h-9"
+                value={searchQuery}
+                onChange={handleSearchChange}
+                disabled={!data || loading}
+              />
+            </div>
+          </header>
+          <main className="flex-1 p-4 lg:p-6 overflow-auto">
+            {loading && (
+              <div className="flex items-center justify-center h-full">
+                <Loader2 className="size-8 animate-spin text-primary" />
               </div>
             )}
-          </div>
-          <div className="relative flex-1 max-w-xs">
-            <Search className="absolute left-2 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-            <Input
-              placeholder="Search keys or values..."
-              className="pl-8 h-9"
-              value={searchQuery}
-              onChange={handleSearchChange}
-              disabled={!data || loading}
-            />
-          </div>
-        </header>
-        <main className="flex-1 p-4 lg:p-6 overflow-auto">
-          {loading && (
-            <div className="flex items-center justify-center h-full">
-              <Loader2 className="size-8 animate-spin text-primary" />
-            </div>
-          )}
-          {!loading && error && (
-            <div className="flex items-center justify-center h-full">
-                <Card className="w-full max-w-md bg-destructive/10 border-destructive/20">
-                    <CardHeader>
-                        <CardTitle className="text-destructive">Error</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <p className="text-destructive-foreground/80">{error}</p>
-                    </CardContent>
-                </Card>
-            </div>
-          )}
-          {!loading && !error && !data && (
-             <div className="flex items-center justify-center h-full">
-                <div className="text-center">
-                    <Workflow className="mx-auto size-12 text-muted-foreground" />
-                    <h2 className="mt-4 text-xl font-semibold font-headline">Welcome to JSON Editor Pro</h2>
-                    <p className="mt-2 text-muted-foreground">Load a JSON file or fetch from a URL to get started.</p>
-                </div>
-            </div>
-          )}
-          {!loading && !error && data && (
-            <JsonTreeView 
-              data={data}
-              expanded={expanded}
-              onToggle={toggleNode}
-              onUpdate={updateNode}
-              onAdd={addNode}
-              onDelete={deleteNode}
-              onDuplicate={duplicateNode}
-              searchResults={searchResults}
-              searchQuery={searchQuery}
-            />
-          )}
-        </main>
-      </SidebarInset>
+            {!loading && error && (
+              <div className="flex items-center justify-center h-full">
+                  <Card className="w-full max-w-md bg-destructive/10 border-destructive/20">
+                      <CardHeader>
+                          <CardTitle className="text-destructive">Error</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                          <p className="text-destructive-foreground/80">{error}</p>
+                      </CardContent>
+                  </Card>
+              </div>
+            )}
+            {!loading && !error && !data && (
+               <div className="flex items-center justify-center h-full">
+                  <div className="text-center">
+                      <Workflow className="mx-auto size-12 text-muted-foreground" />
+                      <h2 className="mt-4 text-xl font-semibold font-headline">Welcome to JSON Editor Pro</h2>
+                      <p className="mt-2 text-muted-foreground">Load a JSON file or fetch from a URL to get started.</p>
+                  </div>
+              </div>
+            )}
+            {!loading && !error && data && (
+              <JsonTreeView 
+                data={data}
+                expanded={expanded}
+                onToggle={toggleNode}
+                onUpdate={updateNode}
+                onAdd={addNode}
+                onDelete={deleteNode}
+                onDuplicate={duplicateNode}
+                searchResults={searchResults}
+                searchQuery={searchQuery}
+              />
+            )}
+          </main>
+        </SidebarInset>
+      </div>
     </SidebarProvider>
   );
 }
