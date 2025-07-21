@@ -3,11 +3,11 @@ import { JsonInfoArticle } from '@/components/json-info-article';
 
 export default function Home() {
   return (
-    <div className="flex flex-col min-h-svh">
-      <div className="flex-1 flex flex-col">
+    <div className="flex flex-col">
+      <div className="relative h-svh">
         <JsonEditorPro />
       </div>
-      <div className="p-4 lg:p-6">
+      <div className="p-4 lg:p-6 bg-background">
         <JsonInfoArticle />
       </div>
     </div>
