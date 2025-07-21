@@ -273,7 +273,7 @@ a.click();
             <AdPlaceholder />
           </SidebarContent>
         </Sidebar>
-        <SidebarInset className="flex flex-col flex-1">
+        <SidebarInset className="flex flex-col flex-1 min-h-0">
           <header className="flex items-center justify-between p-2 border-b bg-background/50 backdrop-blur-sm sticky top-0 z-10">
             <SidebarTrigger />
             <div className="flex flex-1 items-center justify-center px-4">
