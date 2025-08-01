@@ -41,6 +41,29 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    name: 'JSON Editor Pro',
+    description: description,
+    url: url,
+    operatingSystem: 'WEB',
+    applicationCategory: 'DeveloperApplication',
+    offers: {
+      '@type': 'Offer',
+      price: '0',
+      priceCurrency: 'USD',
+    },
+    featureList: [
+        "Interactive Tree View",
+        "Load from URL or File",
+        "Powerful Editing (Add, Edit, Delete, Duplicate)",
+        "Visual HTML Editor for string values",
+        "Smart Search for keys and values",
+        "One-Click Download"
+    ]
+  };
+
   return (
     <html lang="en" className="h-full" suppressHydrationWarning>
       <head>
@@ -53,6 +76,10 @@ export default function RootLayout({
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4648414963251970"
           crossOrigin="anonymous"
         ></script>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
       </head>
       <body className="font-body antialiased h-full">
         <ThemeProvider
